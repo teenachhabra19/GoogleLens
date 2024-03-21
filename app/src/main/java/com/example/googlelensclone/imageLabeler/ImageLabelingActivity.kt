@@ -1,18 +1,20 @@
 package com.example.googlelensclone.imageLabeler
 
+import android.content.Context
 import androidx.camera.core.ImageAnalysis
 import androidx.core.content.ContextCompat
 import com.example.googlelensclone.BaseLensActivity
-import com.google.mlkit.vision.label.ImageLabel
 
-class ImageLabelingActivity: BaseLensActivity() {
-    override val imageAnalyzer= ImageLabelAnalyzer()
-
+class ImageLabelingActivity : BaseLensActivity() {
+    override val imageAnalyzer: ImageLabelAnalyzer by lazy {
+        ImageLabelAnalyzer(applicationContext)
+    }
 
     override fun startScanner() {
-          startImageLabeling()
+        startImageLabeling()
     }
-    private fun startImageLabeling(){
+
+    private fun startImageLabeling() {
         imageAnalysis.setAnalyzer(
             ContextCompat.getMainExecutor(this),
             imageAnalyzer

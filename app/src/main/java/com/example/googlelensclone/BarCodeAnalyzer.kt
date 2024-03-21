@@ -1,6 +1,8 @@
 package com.example.googlelensclone
 
-import android.util.Log
+import android.content.Context
+import android.os.Handler
+import android.widget.Toast
 import androidx.annotation.OptIn
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
@@ -8,31 +10,44 @@ import androidx.camera.core.ImageProxy
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
 
-class BarCodeAnalyzer:ImageAnalysis.Analyzer {
-    val scanner=BarcodeScanning.getClient()
+class BarCodeAnalyzer(private val applicationContext: Context) : ImageAnalysis.Analyzer {
+    private val scanner = BarcodeScanning.getClient()
+
     @OptIn(ExperimentalGetImage::class)
     override fun analyze(imageProxy: ImageProxy) {
-        Log.d("BARCODE","image analysed")
-        imageProxy.image?.let{
-            val inputImage=InputImage.fromMediaImage(
+        imageProxy.image?.let {
+            val inputImage = InputImage.fromMediaImage(
                 it,
                 imageProxy.imageInfo.rotationDegrees
             )
             scanner.process(inputImage)
-                .addOnSuccessListener { codes->
-                   codes.forEach {barcode->
-                       Log.d("BARCODE","""
-                         Format=${barcode.format}  
-                         Value=${barcode.rawValue}
-                       """.trimIndent())
-                   }
+                .addOnSuccessListener { codes ->
+                    val message = buildString {
+                        codes.forEach { barcode ->
+                            append("Format=${barcode.format}\nValue=${barcode.rawValue}\n")
+                        }
+                    }
+                    // Show toast with barcode information
+                    val toast = Toast.makeText(applicationContext, message, Toast.LENGTH_SHORT)
+                    toast.show()
+                    // Dismiss the toast after 3 seconds
+                    Handler().postDelayed({
+                        toast.cancel()
+                    }, 500)
                 }
-                .addOnFailureListener{ ex->
-               Log.e("BARCODE","Detection failed",ex)
-                }.addOnCompleteListener {
+                .addOnFailureListener { ex ->
+                    val errorMessage = "Detection failed: ${ex.message}"
+                    val toast = Toast.makeText(applicationContext, errorMessage, Toast.LENGTH_SHORT)
+                    toast.show()
+                    // Dismiss the toast after 3 seconds
+                    Handler().postDelayed({
+                        toast.cancel()
+                    }, 500)
+                }
+                .addOnCompleteListener {
                     imageProxy.close()
                 }
-        } ?:imageProxy.close()
-
+        } ?: imageProxy.close()
     }
 }
+//Teena
